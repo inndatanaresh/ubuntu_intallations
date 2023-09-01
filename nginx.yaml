@@ -1,1 +1,23 @@
+---
+- name: Install Nginx on Ubuntu
+  hosts: 10.10.5.82  # Replace with the target server(s) where you want to install Nginx.
+  become: yes
+
+  tasks:
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure Nginx is running and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: yes
 
