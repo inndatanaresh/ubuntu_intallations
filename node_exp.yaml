@@ -1,7 +1,7 @@
 ---
 - name: Install Prometheus Node Exporter on Ubuntu
   hosts: 10.10.5.82  # Replace with the name of your inventory group
-  become: false  # Use sudo for privilege escalation
+  become: yes  # Use sudo for privilege escalation
 
   tasks:
     - name: Download and install Node Exporter
