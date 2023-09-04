@@ -1,0 +1,10 @@
+---
+- hosts: 10.10.5.82
+  become: yes
+  tasks:
+  - name: Update apt
+    apt: update_cache=yes
+  - name: Install Apache2
+    apt: name=apache2 state=latest
+  - name: Enable Apache2
+    service: name=apache2 state=started enabled=yes
