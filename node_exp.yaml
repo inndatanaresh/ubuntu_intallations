@@ -1,37 +1,39 @@
 ---
-- name: Install Prometheus Node Exporter on Ubuntu
-  hosts: 10.10.5.82  # Replace with the name of your inventory group
-  become: yes  # Use sudo for privilege escalation
-
-  tasks:
-    - name: Download and install Node Exporter
-      get_url:
-        url: https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.darwin-amd64.tar.gz
-        dest: /tmp/node_exporter.tar.gz
-        validate_certs: no
-
-    - name: Extract Node Exporter
-      ansible.builtin.unarchive:
-        src: /tmp/node_exporter.tar.gz
-        dest: /opt/
-        remote_src: yes
-
-    - name: Create a symlink for Node Exporter
-      file:
-        src: "/opt/node_exporter-1.6.1.linux-amd64/node_exporter"
-        dest: "/usr/local/bin/node_exporter"
-        state: link
-
-    - name: Create systemd service for Node Exporter
+- hosts: 10.10.5.82
+  become: True
+  become_user: sudovars:
+    node_exporter_version: 1.1.2
+  tasks:
+    - name: download node exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.darwin-amd64.tar.gz 
+        dest: /tmp
+    - name: unarchive node exporter
+      unarchive:
+        remote_src: yes
+        src: /tmp/node_exporter-1.6.1.linux-amd64.tar.gz
+        dest: /tmp
+    - name: move node exporter to /usr/local/bin
+      copy:
+        src: /tmp/node_exporter-1.6.1.linux-amd64/node_exporter
+        dest: /usr/local/bin/node_exporter
+        remote_src: yes
+        owner: root
+        group: root
+        mode: 0755
+    - name: install unit file to systemd
+      template:
+        src: templates/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: 0600
+    - name: configure systemd to use service
       systemd:
-        name: node_exporter
+        daemon_reload: yes
         enabled: yes
         state: started
-        daemon_reload: yes
-      notify: restart node_exporter
+        name: node_exporter.service
 
-  handlers:
-    - name: restart node_exporter
-      service:
-        name: node_exporter
-        state: restarted
+
+
