@@ -1,16 +1,44 @@
----
-- name: Install MySQL
-  hosts: 10.10.5.82
+- hosts: 10.10.5.82
   become: yes
+  gather_facts: false
+  vars:
+    new_mysql_root_password: <redacted>
+    mysqlsoftware:
+      - python3-pymysql
+      - mysql-client
+      - mysql-server
+
   tasks:
-    - name: Update APT cache
-      apt:
-        update_cache: yes
+    - name: Install MySQL
+      action: apt install {{ item }}
+      with_items: "{{ mysqlsoftware }}"
 
-    - name: Install MySQL server
-      apt:
-        name: mysql-server
-        state: present
+    - name: Start the MySQL service
+      action: service name=mysql state=started
 
-    - name: Secure MySQL installation
-      command: mysql_secure_installation
+    # 'localhost' needs to be the last item for idempotency, see
+    # http://ansible.cc/docs/modules.html#mysql-user
+    - name: update mysql root password for all root accounts
+      mysql_user:
+        check_implicit_admin: true
+        login_user: root
+        name: root
+        priv: '*.*:ALL,GRANT'
+        host: 10.10.5.82
+        password: 10.10.5.82
+      with_items:
+        - 127.0.0.1
+        - ::1
+        - localhost
+
+    - name: copy .my.cnf file with root password credentials
+      template: src=./shared/my.cnf.j2 dest=/root/.my.cnf owner=root mode=0600
+
+    - name: delete anonymous MySQL server user for $server_hostname
+      action: mysql_user user="" host="inndata" state="absent"
+
+    - name: delete anonymous MySQL server user for localhost
+      action: mysql_user user="" state="absent"
+
+    - name: remove the MySQL test database
+      action: mysql_db db=test state=absent`
