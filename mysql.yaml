@@ -3,10 +3,6 @@
   hosts: 10.10.5.82
   become: yes
   tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-
     - name: Install MySQL server
       apt:
         name: mysql-server
