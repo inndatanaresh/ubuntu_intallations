@@ -1,16 +1,20 @@
-- hosts: 10.10.5.81
-  become: yes
+---
+- name: Install Nginx
+  hosts: 10.10.5.81  # Replace with the target server or group of servers where you want to install Nginx
+  become: yes                # Run tasks as a sudo (privileged) user
+
   tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes      # Update the package cache on Debian-based systems (replace with "yum" for CentOS/RHEL)
 
-    - name: update apt list
-      apt: update_cache=yes   
-   
     - name: Install Nginx
-      apt: name=nginx state=latest
+      apt:
+        name: nginx            # Package name for Nginx on Debian-based systems (replace with "nginx" for CentOS/RHEL)
+        state: present         # Ensure the package is installed
 
-      notify:
-        - restart nginx
-
-  handlers:
-    - name: restart nginx
-      service: name=nginx state=reloaded
+    - name: Start Nginx service
+      service:
+        name: nginx            # Service name for Nginx on Debian-based systems (replace with "nginx" for CentOS/RHEL)
+        state: started         # Start the Nginx service
+        enabled: yes           # Enable Nginx to start on boot
